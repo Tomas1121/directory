@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supabase Futurista</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f4f1de;
+      color: #2d6a4f;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: #2d6a4f;
+      color: white;
+      position: relative;
+    }
+
+    .logo {
+      height: 60px;
+      width: auto;
+    }
+
+    .menu-icon {
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .menu-icon:hover {
+      color: #40916c;
+    }
+
+    .header-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .search-container {
+      margin: 1rem 2rem;
+    }
+
+    .search-container input {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #40916c;
+      border-radius: 8px;
+      background: #fff;
+      color: #2d6a4f;
+    }
+
+    .search-container input:focus {
+      outline: 2px solid #40916c;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2rem 0;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: left;
+    }
+
+    th {
+      background: #2d6a4f;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background: #e9edc9;
+    }
+
+    tr:hover {
+      background: #40916c;
+      color: white;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      background: #C1272D;
+      color: white;
+    }
+
+    /* Medias Queries para Hacer el Diseño Responsive */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+      }
+
+      .logo {
+        height: 50px;
+      }
+
+      .header-title {
+        font-size: 1.2rem;
+        margin-top: 1rem;
+      }
+
+      .menu-icon {
+        font-size: 1.8rem;
+      }
+
+      .search-container {
+        margin: 1rem;
+      }
+
+      .search-container input {
+        padding: 0.7rem;
+        font-size: 1.1rem;
+      }
+
+      table {
+        margin: 1rem 0;
+      }
+
+      th, td {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header {
+        padding: 0.8rem;
+      }
+
+      .menu-icon {
+        font-size: 1.8rem;
+      }
+
+      .search-container input {
+        font-size: 1rem;
+        padding: 0.8rem;
+      }
+
+      table {
+        font-size: 0.8rem;
+      }
+
+      th, td {
+        padding: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+    <header>
+        <img src="logo_ecoglerias_transparente.png" alt="Eco Galerías Logo" class="logo">
+        <h1 class="header-title">DIRECTORIO DE LOCALES</h1>
+        <div class="menu-icon" onclick="window.location.href='confi.html'">
+          ☰
+        </div>
+      </header>
+
+  <div class="search-container">
+    <input
+      type="text"
+      id="searchBar"
+      placeholder="Buscar por Nombre, Categoría o Ubicación..."
+      oninput="filterTable()"
+    />
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Número Local</th>
+        <th>Nombre Local</th>
+        <th>Ubicación</th>
+        <th>Categoría</th>
+      </tr>
+    </thead>
+    <tbody id="dataTable">
+      <!-- Datos se cargarán dinámicamente -->
+    </tbody>
+  </table>
+
+  <footer>
+    &copy; 2025 - Tomas Heredia Lopez
+  </footer>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabaseUrl = 'https://fwyrtlwfdavlbmlfwdwt.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3eXJ0bHdmZGF2bGJtbGZ3ZHd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwOTU4MTAsImV4cCI6MjA1MzY3MTgxMH0.xx8UbhOAJT5hCxoaaOvyx0gA-OhIyM3Bl40BcFdSMY8';
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const dataTable = document.getElementById('dataTable');
+    const searchBar = document.getElementById('searchBar');
+    
+    let localesData = []; // Variable global para almacenar los datos originales
+
+    // Cargar datos desde Supabase
+    async function loadData() {
+        const { data, error } = await supabase.from('tabla_locales').select('*');
+        if (error) {
+            console.error('Error al cargar datos:', error);
+            return;
+        }
+        localesData = data; // Guardamos los datos originales
+        renderTable(localesData);
+    }
+
+    // Renderizar la tabla
+    function renderTable(data) {
+        dataTable.innerHTML = ''; // Limpiar tabla
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.numero_local}</td>
+                <td>${item.nombre_local}</td>
+                <td>${item.ubicacion}</td>
+                <td>${item.categoria}</td>
+            `;
+            dataTable.appendChild(row);
+        });
+    }
+
+    // Filtrar tabla dinámicamente
+    function filterTable() {
+        const filter = searchBar.value.toLowerCase();
+        const filteredData = localesData.filter(item =>
+            item.numero_local.toLowerCase().includes(filter) ||
+            item.nombre_local.toLowerCase().includes(filter) ||
+            item.ubicacion.toLowerCase().includes(filter) ||
+            item.categoria.toLowerCase().includes(filter)
+        );
+        renderTable(filteredData); // Mostrar solo los resultados filtrados
+    }
+
+    // Escuchar cambios en el input de búsqueda
+    searchBar.addEventListener('input', filterTable);
+
+    // Cargar datos al iniciar
+    loadData();
+  </script>
+
+</body>
+</html>
